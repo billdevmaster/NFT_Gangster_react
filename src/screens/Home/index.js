@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Web3 from 'web3';
 import { useWallet } from '@binance-chain/bsc-use-wallet'
 import { useWalletModal } from '@pancakeswap-libs/uikit'
 
@@ -15,32 +16,37 @@ import VideoImage from "../../assets/videos/Untitled-poster-00001.jpg";
 import Video1 from "../../assets/videos/Untitled-transcode.mp4";
 import Video2 from "../../assets/videos/Untitled-transcode.webm";
 
-const Home = () => {
-  const web3 = useWeb3()
-  const mintContract = useMint()
-  const { account, connect, reset } = useWallet()
-  const { onPresentConnectModal } = useWalletModal(connect, reset, account);
-  const [amount, setAmount] = useState(0);
+const {ethereum} = window;
+let web3 = new Web3(ethereum);
 
+const Home = () => {
+  const mintContract = useMint()
+  // const { onPresentConnectModal } = useWalletModal(connect, reset, account);
+  const [amount, setAmount] = useState(0);
+  const [account, setAccount] = useState("");
+  
   const purchase = async () => {
-    if (!account){
-      if (window.localStorage.getItem('accountStatus')) {
-        connect('injected')
-      }else{
-        onPresentConnectModal();
-      }
-    }else{
-      let isWhitelist = await getIsWhitelist(mintContract, account);
-      let gas = 178000;
-      let value = 0;
-      if (isWhitelist){
-        value = web3.utils.toWei((0.08*amount).toString(), 'ether');
-      }else{
-        value = web3.utils.toWei((0.1*amount).toString(), 'ether');
-      }
-      gas = gas + (amount - 1) * 50000;
-      await mintNFT(mintContract, account, amount, value, gas);
+    const currentAccount = await web3.eth.getAccounts();
+    if (currentAccount[0] === undefined) {
+      ethereum.request({method: 'eth_requestAccounts'})
+      .then(async result => {
+        const currentAccount = await web3.eth.getAccounts();
+        setAccount(currentAccount[0]);
+      })
+      .catch((err) => {
+        return;
+      });
+    } else {
+      console.log("good");
     }
+    // if (!account){
+    //   if (window.localStorage.getItem('accountStatus')) {
+    //     connect('injected')
+    //   }else{
+    //     onPresentConnectModal();
+    //   }
+    // }else{
+    // }
   }
 
   return (
